@@ -82,7 +82,7 @@ button.primary:hover{background:var(--btn);opacity:.88}
 
 /* ---------- poster ---------- */
 #poster{container-type:inline-size;width:100%;max-width:640px;box-shadow:0 1px 2px rgba(0,0,0,.08),0 12px 30px -12px rgba(0,0,0,.25);user-select:none;-webkit-user-select:none}
-#txt{background:var(--p-top);color:var(--p-ink);font-family:var(--f-display);padding:11cqw 6cqw 13cqw;line-height:1.38;white-space:pre-wrap;text-align:justify;word-break:break-all}
+#txt{background:var(--p-top);color:var(--p-ink);font-family:var(--f-display);text-spacing-trim:space-all;font-kerning:none;padding:11cqw 6cqw 13cqw;line-height:1.38;white-space:pre-wrap;text-align:justify;word-break:break-all}
 #txt .ch{cursor:pointer;transition:background-color .12s}
 #txt .ch:hover{background:color-mix(in srgb,var(--p-ink) 22%,transparent)}
 #txt .ch.p{color:transparent;background:var(--p-hole)}
@@ -469,6 +469,7 @@ const endDrag=()=>{ if(pan){pan=null; save(); return;} if(!drag) return; drag.t.
 $('#col').addEventListener('pointerup',endDrag); $('#col').addEventListener('pointercancel',endDrag);
 
 /* ---------- export ---------- */
+const OPENING='「『（《〈【〔〖“‘([{';
 function drawPoly(c,pts,x,y,w,h){c.beginPath();pts.forEach((p,k)=>{const px=x+p[0]/100*w,py=y+p[1]/100*h;k?c.lineTo(px,py):c.moveTo(px,py)});c.closePath();c.fill();}
 function drawCover(c,img,x,y,w,h){
   const k=Math.max(w/img.width,h/img.height), iw=img.width*k, ih=img.height*k;
@@ -498,7 +499,13 @@ $('#export').addEventListener('click',async()=>{
     spans.forEach((sp,i)=>{
       if(!sp) return; const r=rel(sp);
       if(holes.has(i)){c.fillStyle=S.hole; drawPoly(c,shapePts(holes.get(i).seed),r.x,r.y,r.w,r.h);}
-      else{c.fillStyle=S.ink; c.fillText(sp.textContent,r.x,r.y+r.h/2);}
+      else{
+        // full-width punctuation can be squeezed in the page layout; place the glyph so its ink lands where the browser drew it
+        const ch=sp.textContent, adv=c.measureText(ch).width;
+        let x=r.x;
+        if(adv>r.w+.5 && OPENING.includes(ch)) x=r.x+r.w-adv;
+        c.fillStyle=S.ink; c.fillText(ch,x,r.y+r.h/2);
+      }
     });
     c.save(); c.beginPath(); c.rect(cr.x,cr.y,cr.w,cr.h); c.clip();
     document.querySelectorAll('#tiles .tile').forEach(t=>{
