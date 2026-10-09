@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="貼上你的文章，把想說的字打下來，拼成另一句話。">
+<style>[hidden]{display:none!important}img{max-width:100%}body{margin:0}</style>
+<title>文字打孔器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: workbench — controls column on the left, the poster (text panel above, collage below) on the right; stacks on phones. */
+:root{
+  --bg:#ECEEEF; --panel:#FFFFFF; --fg:#17181A; --muted:#5D6266; --line:#D3D7DA; --soft:#F5F6F7;
+  --btn:#17181A; --btn-fg:#FFFFFF;
+  --f-display:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  --f-ui:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#131416; --panel:#1C1E21; --fg:#ECEDEE; --muted:#9BA1A6; --line:#30343A; --soft:#24272B;
+  --btn:#ECEDEE; --btn-fg:#131416; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131416; --panel:#1C1E21; --fg:#ECEDEE; --muted:#9BA1A6; --line:#30343A; --soft:#24272B;
+  --btn:#ECEDEE; --btn-fg:#131416; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:14px;line-height:1.6;padding-inline:16px;padding-block:20px 40px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:860px){.wrap{grid-template-columns:minmax(0,1fr)}}
+
+header.top{max-width:1180px;margin:0 auto 18px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+header.top h1{font-family:var(--f-display);font-weight:900;font-size:28px;letter-spacing:.08em;margin:0}
+header.top p{margin:0;color:var(--muted)}
+
+.side{display:flex;flex-direction:column;gap:18px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.lbl{font-size:12px;letter-spacing:.12em;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.lbl b{font-weight:500;color:var(--fg);letter-spacing:0;font-variant-numeric:tabular-nums}
+.sub{font-size:12px;color:var(--muted);margin:-4px 0 0}
+textarea{width:100%;min-height:200px;resize:vertical;font-family:var(--f-display);font-size:15px;line-height:1.7;padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:var(--soft);color:var(--fg)}
+textarea:focus-visible,input:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.warn{color:#C2410C;font-size:12px}
+
+.presets{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.preset{border:1px solid var(--line);border-radius:4px;background:none;padding:0;cursor:pointer;overflow:hidden;display:flex;flex-direction:column;color:var(--fg);font:inherit;font-size:12px}
+.preset .sw{height:34px;display:grid;grid-template-rows:1fr 1fr;place-items:center;font-family:var(--f-display);font-size:12px}
+.preset .sw i{display:grid;place-items:center;width:100%;height:100%;font-style:normal}
+.preset span{padding:4px 0}
+.preset[aria-pressed="true"]{outline:2px solid var(--fg);outline-offset:1px}
+.colors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.colors fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;min-width:0}
+.colors legend{font-size:12px;color:var(--fg);font-weight:500;padding:0;margin-bottom:4px}
+.pick{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.pick input[type=color]{width:34px;height:28px;flex:none}
+.pick input[type=text]{width:100%;min-width:0;font:inherit;font-size:12px;font-variant-numeric:tabular-nums;padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--soft);color:var(--fg);text-transform:uppercase}
+input[type=color]{border:1px solid var(--line);border-radius:4px;background:none;padding:2px;cursor:pointer}
+.row{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.check{display:flex;gap:6px;align-items:center;cursor:pointer}
+input[type=range]{width:100%;accent-color:var(--fg)}
+.sl{display:flex;flex-direction:column;gap:2px}
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg button{font:inherit;font-size:13px;border:0;background:var(--panel);color:var(--fg);padding:7px 0;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--btn);color:var(--btn-fg)}
+
+.photo{display:flex;gap:10px;align-items:center}
+.thumb{width:56px;height:56px;border-radius:4px;border:1px dashed var(--line);background:var(--soft) center/cover no-repeat;flex:none}
+.photo .btns{flex:1}
+#file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+button.b,label.b{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--panel);color:var(--fg);padding:8px 14px;border-radius:4px;cursor:pointer;display:inline-block}
+button.b:hover,label.b:hover{background:var(--soft)}
+button.b:disabled{opacity:.45;cursor:default}
+button.primary{background:var(--btn);color:var(--btn-fg);border-color:var(--btn)}
+button.primary:hover{background:var(--btn);opacity:.88}
+.drop-on{outline:2px dashed var(--fg);outline-offset:4px}
+
+.stage{display:flex;flex-direction:column;gap:10px;min-width:0;align-items:center}
+.hint{color:var(--muted);font-size:13px;align-self:stretch;text-align:center}
+
+/* ---------- poster ---------- */
+#poster{container-type:inline-size;width:100%;max-width:640px;box-shadow:0 1px 2px rgba(0,0,0,.08),0 12px 30px -12px rgba(0,0,0,.25);user-select:none;-webkit-user-select:none}
+#txt{background:var(--p-top);color:var(--p-ink);font-family:var(--f-display);padding:11cqw 6cqw 13cqw;line-height:1.38;white-space:pre-wrap;text-align:justify;word-break:break-all}
+#txt .ch{cursor:pointer;transition:background-color .12s}
+#txt .ch:hover{background:color-mix(in srgb,var(--p-ink) 22%,transparent)}
+#txt .ch.p{color:transparent;background:var(--p-hole)}
+#txt .ch.p:hover{background:var(--p-hole);opacity:.75}
+#col{position:relative;background-color:var(--p-bottom);background-repeat:no-repeat;overflow:hidden;touch-action:none}
+#col.has-photo{cursor:move}
+#tint{position:absolute;inset:0;background:var(--p-bottom);pointer-events:none}
+.tile{position:absolute;display:grid;place-items:center;background:var(--p-tile);color:var(--p-tile-ink);font-family:var(--f-display);line-height:1;cursor:grab;touch-action:none}
+.tile:active{cursor:grabbing}
+.tile.drag{filter:drop-shadow(0 4px 8px rgba(0,0,0,.35));z-index:5}
+.empty{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--f-ui);font-size:3.2cqw;color:var(--p-tile);opacity:.6;pointer-events:none;text-align:center;padding:0 8cqw}
+
+dialog{border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--fg);padding:16px;max-width:min(92vw,720px);width:100%}
+dialog::backdrop{background:rgba(10,10,12,.6)}
+dialog img{display:block;width:100%;height:auto;max-height:70vh;object-fit:contain;background:var(--soft)}
+dialog .foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap}
+dialog .foot p{margin:0;color:var(--muted);font-size:13px}
+@media (prefers-reduced-motion:reduce){#txt .ch{transition:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>文字打孔器</h1>
+  <p>貼上你的文章，把想說的字打下來，拼成另一句話。</p>
+</header>
+
+<div class="wrap">
+  <div class="side">
+    <section class="card">
+      <div class="lbl">文章 <b id="count">0 字</b></div>
+      <textarea id="src" spellcheck="false" aria-label="文章內容"></textarea>
+      <div id="warn" class="warn" hidden>超過 400 字，版面會變得很擠，建議刪減或調小字級。</div>
+    </section>
+
+    <section class="card">
+      <div class="lbl">配色模板</div>
+      <div class="presets" id="presets"></div>
+      <p class="sub">選了模板之後，下面每個顏色都還能再改。</p>
+      <div class="colors">
+        <fieldset><legend>文章區</legend>
+          <label class="pick"><input type="color" id="c-top" aria-label="文章底色"><input type="text" id="t-top" maxlength="7" aria-label="文章底色色碼"></label>
+          <label class="pick"><input type="color" id="c-ink" aria-label="文章字色"><input type="text" id="t-ink" maxlength="7" aria-label="文章字色色碼"></label>
+          <div class="sub" style="margin:0">上：底色　下：字色</div>
+        </fieldset>
+        <fieldset><legend>拼貼區</legend>
+          <label class="pick"><input type="color" id="c-bottom" aria-label="拼貼底色"><input type="text" id="t-bottom" maxlength="7" aria-label="拼貼底色色碼"></label>
+          <label class="pick"><input type="color" id="c-hole" aria-label="孔洞顏色"><input type="text" id="t-hole" maxlength="7" aria-label="孔洞顏色色碼"></label>
+          <div class="sub" style="margin:0">上：底色　下：孔洞</div>
+        </fieldset>
+        <fieldset><legend>字片</legend>
+          <label class="pick"><input type="color" id="c-tileBg" aria-label="字片底色"><input type="text" id="t-tileBg" maxlength="7" aria-label="字片底色色碼"></label>
+          <label class="pick"><input type="color" id="c-tileInk" aria-label="字片字色"><input type="text" id="t-tileInk" maxlength="7" aria-label="字片字色色碼"></label>
+          <div class="sub" style="margin:0">上：底色　下：字色</div>
+        </fieldset>
+        <fieldset><legend>其他</legend>
+          <label class="check"><input type="checkbox" id="bold"> 粗體</label>
+          <label class="check"><input type="checkbox" id="linkTile"> 字片跟文章同色</label>
+        </fieldset>
+      </div>
+    </section>
+
+    <section class="card" id="photoCard">
+      <div class="lbl">拼貼區底圖</div>
+      <div class="photo">
+        <div class="thumb" id="thumb" aria-hidden="true"></div>
+        <div class="btns">
+          <label class="b" for="file">上傳照片</label>
+          <button class="b" id="rmPhoto" disabled>移除</button>
+        </div>
+        <input type="file" id="file" accept="image/*">
+      </div>
+      <div class="sl"><div class="lbl">照片大小 <b id="vZoom"></b></div><input type="range" id="zoom-r" min="100" max="400" step="1"></div>
+      <div class="sl"><div class="lbl">左右位置 <b id="vPX"></b></div><input type="range" id="px-r" min="0" max="100" step="1"></div>
+      <div class="sl"><div class="lbl">上下位置 <b id="vPY"></b></div><input type="range" id="py-r" min="0" max="100" step="1"></div>
+      <div class="sl"><div class="lbl">底色蓋在照片上 <b id="vTint"></b></div><input type="range" id="tint-r" min="0" max="90" step="1"></div>
+      <div class="btns"><button class="b" id="resetPhoto" disabled>照片位置重設</button></div>
+      <p class="sub">也可以在拼貼區的空白處直接拖動照片。照片只留在你的瀏覽器裡，不會上傳到任何地方。</p>
+    </section>
+
+    <section class="card">
+      <div class="lbl">打孔形狀</div>
+      <div class="seg" id="shape" role="group" aria-label="打孔形狀">
+        <button data-v="square">方孔</button><button data-v="round">圓孔</button><button data-v="torn">撕邊</button>
+      </div>
+      <div class="sl"><div class="lbl">文章字級 <b id="vSize"></b></div><input type="range" id="size" min="3" max="7" step="0.1"></div>
+      <div class="sl"><div class="lbl">字片大小 <b id="vTile"></b></div><input type="range" id="tileS" min="6" max="18" step="0.5"></div>
+      <div class="sl"><div class="lbl">拼貼區高度 <b id="vColH"></b></div><input type="range" id="colH" min="40" max="120" step="1"></div>
+    </section>
+
+    <div class="btns">
+      <button class="b" id="shuffle">重新排列</button>
+      <button class="b" id="clear">清除打孔</button>
+      <button class="b primary" id="export">輸出圖片</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="hint">點文章裡的字把它打下來，點孔洞可以放回去；下方的字片可以拖動。</div>
+    <div id="poster">
+      <div id="txt"></div>
+      <div id="col"><div id="tint"></div><div id="tiles"></div></div>
+    </div>
+  </div>
+</div>
+
+<dialog id="dlg">
+  <img id="outImg" alt="輸出的打孔拼貼圖">
+  <div class="foot">
+    <p id="dlMsg">按「下載圖片」把 PNG 存到你的電腦或手機。</p>
+    <div class="btns">
+      <button class="b" id="closeDlg">關閉</button>
+      <button class="b primary" id="dlBtn">下載圖片</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+const SAMPLE = `末班車駛過隧道的時候，車窗變成一面不太誠實的鏡子。我看見自己，也看見身後空著的座位，像一句話停在半路，沒有人接。
+
+我們總以為把字寫下來，就能把心事收好；可是有些字太重，紙承受不住，就從句子裡掉了出去，落在說不清的地方。掉下去的那幾個字，拼起來，才是我一直想開口的事。`;
+const SAMPLE_PUNCH = ['我','沒','說','出','口'];
+
+const PRESETS = [
+  {name:'鉛字', top:'#F4F4F1', ink:'#1B1B1B', bottom:'#1B1B1B'},
+  {name:'藍曬', top:'#1F4E9C', ink:'#EEF3FA', bottom:'#EEF3FA'},
+  {name:'朱印', top:'#F3EEE8', ink:'#A8231C', bottom:'#A8231C'},
+  {name:'薄荷', top:'#CFE6DA', ink:'#1E4A38', bottom:'#1E4A38'},
+  {name:'霧紫', top:'#3A3446', ink:'#E4DDF0', bottom:'#B7AACB'},
+];
+const COLOR_KEYS=['top','ink','bottom','hole','tileBg','tileInk'];
+
+const $ = s => document.querySelector(s);
+const KEY='text-punch-v2', PHOTO_KEY='text-punch-photo-v2';
+let S, photo=null; // photo: {url, img}
+
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function shapePts(seed){
+  const r=rng(seed), pts=[];
+  if(S.shape==='round'){
+    for(let k=0;k<40;k++){const a=k/40*Math.PI*2; pts.push([50+Math.cos(a)*48,50+Math.sin(a)*48])}
+    return pts;
+  }
+  const torn=S.shape==='torn', n=torn?7:1;
+  const d=()=> torn ? (r()<.6 ? r()*2.5 : 2+r()*9) : 0;
+  for(let k=0;k<n;k++) pts.push([k/n*100, d()]);
+  for(let k=0;k<n;k++) pts.push([100-d(), k/n*100]);
+  for(let k=0;k<n;k++) pts.push([100-k/n*100, 100-d()]);
+  for(let k=0;k<n;k++) pts.push([d(), 100-k/n*100]);
+  return pts;
+}
+const clip = pts => 'polygon('+pts.map(p=>p[0].toFixed(1)+'% '+p[1].toFixed(1)+'%').join(',')+')';
+
+function presetColors(i){const p=PRESETS[i];return {top:p.top,ink:p.ink,bottom:p.bottom,hole:p.bottom,tileBg:p.top,tileInk:p.ink}}
+function defaults(){
+  return {text:SAMPLE, punched:[], preset:0, ...presetColors(0), linkTile:true, bold:false, shape:'square', tint:35, zoom:100, px:50, py:50,
+          size:4.6, tileSize:10, colH:70, manual:false, layoutSeed:7};
+}
+function load(){
+  try{const v=JSON.parse(localStorage.getItem(KEY)); if(v&&typeof v.text==='string') return {...defaults(),...v};}catch(e){}
+  const s=defaults();
+  SAMPLE_PUNCH.forEach((c,k)=>{const i=s.text.indexOf(c); if(i>=0) s.punched.push({i,ch:c,seed:1000+k*97})});
+  return s;
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+/* ---------- text panel ---------- */
+let spans=[];
+function buildText(){
+  const box=$('#txt'); box.textContent=''; spans=[];
+  const frag=document.createDocumentFragment();
+  [...S.text].forEach((ch,i)=>{
+    if(/\s/.test(ch)){frag.appendChild(document.createTextNode(ch)); spans[i]=null; return;}
+    const sp=document.createElement('span'); sp.className='ch'; sp.dataset.i=i; sp.textContent=ch;
+    frag.appendChild(sp); spans[i]=sp;
+  });
+  box.appendChild(frag); markHoles();
+}
+function markHoles(){
+  spans.forEach(sp=>{ if(sp){sp.classList.remove('p'); sp.style.clipPath='';}});
+  S.punched.forEach(p=>{const sp=spans[p.i]; if(sp){sp.classList.add('p'); sp.style.clipPath=clip(shapePts(p.seed));}});
+}
+
+/* ---------- collage ---------- */
+const tileBox = () => S.tileSize*1.18;
+function autoLayout(){
+  const T=tileBox(), maxW=90, r=rng(S.layoutSeed);
+  const rows=[[]]; let w=0;
+  S.punched.forEach(p=>{
+    const g=T*(.1+r()*.3);
+    if(rows.at(-1).length && w+T>maxW){rows.push([]); w=0}
+    rows.at(-1).push({p,g}); w+=T+g;
+  });
+  const rowH=T*1.5, totalH=rows.length*rowH;
+  rows.forEach((row,ri)=>{
+    const rw=row.reduce((a,o,k)=>a+T+(k<row.length-1?o.g:0),0);
+    let x=(100-rw)/2; const y0=S.colH/2-totalH/2+ri*rowH+(rowH-T)/2;
+    row.forEach(o=>{o.p.x=x; o.p.y=y0+(r()-.5)*T*.5; x+=T+o.g});
+  });
+}
+function renderTiles(){
+  $('#col').style.height=S.colH+'cqw';
+  const box=$('#tiles'); box.textContent='';
+  const T=tileBox();
+  if(!S.punched.length){const e=document.createElement('div');e.className='empty';e.textContent='點上面的字，打下來的字片會出現在這裡';box.appendChild(e);}
+  S.punched.forEach(p=>{
+    const t=document.createElement('div'); t.className='tile'; t.textContent=p.ch;
+    Object.assign(t.style,{left:p.x+'cqw',top:p.y+'cqw',width:T+'cqw',height:T+'cqw',fontSize:S.tileSize+'cqw',fontWeight:S.bold?700:400,clipPath:clip(shapePts(p.seed))});
+    t._p=p; box.appendChild(t);
+  });
+}
+
+/* ---------- apply ---------- */
+const tileColors=()=> S.linkTile ? {bg:S.top, ink:S.ink} : {bg:S.tileBg, ink:S.tileInk};
+function syncPickers(){
+  if(S.linkTile){S.tileBg=S.top; S.tileInk=S.ink;}
+  COLOR_KEYS.forEach(k=>{
+    $('#c-'+k).value=S[k]; const t=$('#t-'+k); if(document.activeElement!==t) t.value=S[k].toUpperCase();
+  });
+  ['tileBg','tileInk'].forEach(k=>{$('#c-'+k).disabled=S.linkTile; $('#t-'+k).disabled=S.linkTile;});
+}
+function applyStyle(){
+  const P=$('#poster').style, tc=tileColors();
+  P.setProperty('--p-top',S.top); P.setProperty('--p-ink',S.ink); P.setProperty('--p-bottom',S.bottom);
+  P.setProperty('--p-hole',S.hole); P.setProperty('--p-tile',tc.bg); P.setProperty('--p-tile-ink',tc.ink);
+  const t=$('#txt').style; t.fontSize=S.size+'cqw'; t.fontWeight=S.bold?700:400;
+  $('#vSize').textContent=S.size.toFixed(1); $('#vTile').textContent=S.tileSize; $('#vColH').textContent=S.colH;
+  $('#vTint').textContent=photo? S.tint+'%' : '先上傳照片';
+  syncPickers();
+  $('#bold').checked=S.bold; $('#linkTile').checked=S.linkTile;
+  $('#size').value=S.size; $('#tileS').value=S.tileSize; $('#colH').value=S.colH; $('#tint-r').value=S.tint;
+  $('#tint-r').disabled=!photo;
+  document.querySelectorAll('.preset').forEach((b,i)=>b.setAttribute('aria-pressed',String(i===S.preset)));
+  document.querySelectorAll('#shape button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===S.shape)));
+  $('#col').style.backgroundImage = photo ? `url(${photo.url})` : 'none';
+  $('#col').classList.toggle('has-photo',!!photo);
+  $('#tint').style.opacity = photo ? S.tint/100 : 0;
+  $('#thumb').style.backgroundImage = photo ? `url(${photo.url})` : 'none';
+  $('#rmPhoto').disabled=!photo; $('#resetPhoto').disabled=!photo;
+  ['zoom-r','px-r','py-r'].forEach(id=>$('#'+id).disabled=!photo);
+  $('#zoom-r').value=S.zoom; $('#px-r').value=S.px; $('#py-r').value=S.py;
+  $('#vZoom').textContent=photo?S.zoom+'%':'—'; $('#vPX').textContent=photo?Math.round(S.px):'—'; $('#vPY').textContent=photo?Math.round(S.py):'—';
+  placePhoto();
+}
+/* photo geometry: "cover" size × zoom, positioned like background-position percentages */
+function photoRect(W,H){
+  const img=photo.img, k=Math.max(W/img.width,H/img.height)*S.zoom/100, iw=img.width*k, ih=img.height*k;
+  return {iw,ih,x:(W-iw)*S.px/100,y:(H-ih)*S.py/100};
+}
+function placePhoto(){
+  if(!photo) return;
+  const col=$('#col'), r=photoRect(col.clientWidth,col.clientHeight);
+  col.style.backgroundSize=`${r.iw}px ${r.ih}px`;
+  col.style.backgroundPosition=`${r.x}px ${r.y}px`;
+}
+new ResizeObserver(()=>placePhoto()).observe(document.getElementById('col'));
+function count(){
+  const n=[...S.text].filter(c=>!/\s/.test(c)).length;
+  $('#count').textContent=n+' 字'; $('#warn').hidden=n<=400;
+}
+function refreshCollage(){ if(!S.manual) autoLayout(); renderTiles(); save(); }
+const rebuildShapes=()=>{markHoles(); renderTiles(); save();};
+
+/* ---------- color events ---------- */
+$('#presets').innerHTML=PRESETS.map((p,i)=>`<button class="preset" data-i="${i}" aria-pressed="false"><div class="sw"><i style="background:${p.top};color:${p.ink}">字</i><i style="background:${p.bottom}"></i></div><span>${p.name}</span></button>`).join('');
+$('#presets').addEventListener('click',e=>{
+  const b=e.target.closest('.preset'); if(!b) return;
+  S.preset=+b.dataset.i; Object.assign(S,presetColors(S.preset)); S.linkTile=true; applyStyle(); save();
+});
+const HEX=/^#[0-9a-f]{6}$/i;
+COLOR_KEYS.forEach(k=>{
+  const set=v=>{
+    const linkedHole = S.hole===S.bottom;
+    S[k]=v; S.preset=-1;
+    if(k==='bottom' && linkedHole) S.hole=v; // hole follows the collage colour until set separately
+    applyStyle(); save();
+  };
+  $('#c-'+k).addEventListener('input',e=>set(e.target.value));
+  $('#t-'+k).addEventListener('input',e=>{let v=e.target.value.trim(); if(v[0]!=='#') v='#'+v; if(HEX.test(v)) set(v.toLowerCase());});
+  $('#t-'+k).addEventListener('blur',e=>{e.target.value=S[k].toUpperCase();});
+});
+$('#linkTile').addEventListener('change',e=>{S.linkTile=e.target.checked; applyStyle(); save();});
+$('#bold').addEventListener('change',e=>{S.bold=e.target.checked; applyStyle(); renderTiles(); save();});
+
+/* ---------- size / shape ---------- */
+$('#size').addEventListener('input',e=>{S.size=+e.target.value; applyStyle(); save();});
+$('#tileS').addEventListener('input',e=>{S.tileSize=+e.target.value; applyStyle(); refreshCollage();});
+$('#colH').addEventListener('input',e=>{S.colH=+e.target.value; applyStyle(); refreshCollage();});
+$('#shape').addEventListener('click',e=>{const b=e.target.closest('button'); if(!b) return; S.shape=b.dataset.v; applyStyle(); rebuildShapes();});
+
+/* ---------- photo ---------- */
+function setPhoto(url){
+  if(!url){photo=null; applyStyle(); try{localStorage.removeItem(PHOTO_KEY)}catch(e){} return;}
+  const img=new Image();
+  img.onload=()=>{photo={url,img}; applyStyle();};
+  img.src=url;
+}
+function readFile(f){
+  if(!f || !f.type.startsWith('image/')) return;
+  const fr=new FileReader();
+  fr.onload=()=>{
+    const img=new Image();
+    img.onload=()=>{ // shrink large photos so the page stays fast
+      const M=2000, k=Math.min(1,M/Math.max(img.width,img.height));
+      const cv=document.createElement('canvas'); cv.width=Math.round(img.width*k); cv.height=Math.round(img.height*k);
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      const url=cv.toDataURL('image/jpeg',.88);
+      S.zoom=100; S.px=50; S.py=50; save();
+      setPhoto(url);
+      try{localStorage.setItem(PHOTO_KEY,url)}catch(e){}
+    };
+    img.src=fr.result;
+  };
+  fr.readAsDataURL(f);
+}
+$('#file').addEventListener('change',e=>{readFile(e.target.files[0]); e.target.value='';});
+$('#rmPhoto').addEventListener('click',()=>setPhoto(null));
+$('#tint-r').addEventListener('input',e=>{S.tint=+e.target.value; applyStyle(); save();});
+[['zoom-r','zoom'],['px-r','px'],['py-r','py']].forEach(([id,k])=>$('#'+id).addEventListener('input',e=>{S[k]=+e.target.value; applyStyle(); save();}));
+$('#resetPhoto').addEventListener('click',()=>{S.zoom=100; S.px=50; S.py=50; applyStyle(); save();});
+// pinch-free zoom: scroll wheel over the collage while holding Ctrl / ⌘
+$('#col').addEventListener('wheel',e=>{
+  if(!photo || !(e.ctrlKey||e.metaKey)) return;
+  e.preventDefault(); S.zoom=Math.max(100,Math.min(400,Math.round(S.zoom-e.deltaY*.3))); applyStyle(); save();
+},{passive:false});
+['#photoCard','#col'].forEach(sel=>{
+  const el=$(sel);
+  el.addEventListener('dragover',e=>{if([...e.dataTransfer.types].includes('Files')){e.preventDefault(); el.classList.add('drop-on');}});
+  el.addEventListener('dragleave',()=>el.classList.remove('drop-on'));
+  el.addEventListener('drop',e=>{e.preventDefault(); el.classList.remove('drop-on'); readFile(e.dataTransfer.files[0]);});
+});
+
+/* ---------- text & punching ---------- */
+let tmr;
+$('#src').addEventListener('input',e=>{
+  clearTimeout(tmr);
+  tmr=setTimeout(()=>{
+    S.text=e.target.value; const chars=[...S.text];
+    S.punched=S.punched.filter(p=>chars[p.i]===p.ch);
+    buildText(); count(); refreshCollage();
+  },180);
+});
+$('#txt').addEventListener('click',e=>{
+  const sp=e.target.closest('.ch'); if(!sp) return;
+  const i=+sp.dataset.i, k=S.punched.findIndex(p=>p.i===i);
+  if(k>=0) S.punched.splice(k,1);
+  else{
+    const p={i,ch:sp.textContent,seed:(Math.random()*1e9)|0};
+    if(S.manual){const T=tileBox(); p.x=50-T/2+(Math.random()-.5)*20; p.y=S.colH/2-T/2+(Math.random()-.5)*10;}
+    S.punched.push(p);
+  }
+  markHoles(); refreshCollage();
+});
+$('#shuffle').addEventListener('click',()=>{S.manual=false; S.layoutSeed=(Math.random()*1e9)|0; refreshCollage();});
+$('#clear').addEventListener('click',()=>{S.punched=[]; S.manual=false; markHoles(); refreshCollage();});
+
+/* drag tiles */
+let drag=null;
+let pan=null;
+$('#col').addEventListener('pointerdown',e=>{
+  const t=e.target.closest('.tile');
+  if(!t){ // drag empty space → move the photo
+    if(!photo) return;
+    e.preventDefault(); $('#col').setPointerCapture(e.pointerId);
+    const col=$('#col'), r=photoRect(col.clientWidth,col.clientHeight);
+    pan={sx:e.clientX,sy:e.clientY,ox:S.px,oy:S.py,dw:col.clientWidth-r.iw,dh:col.clientHeight-r.ih};
+    return;
+  }
+  e.preventDefault(); t.setPointerCapture(e.pointerId); t.classList.add('drag');
+  const unit=$('#poster').getBoundingClientRect().width/100;
+  drag={t,p:t._p,sx:e.clientX,sy:e.clientY,ox:t._p.x,oy:t._p.y,unit};
+});
+$('#col').addEventListener('pointermove',e=>{
+  if(pan){
+    const cl=v=>Math.max(0,Math.min(100,v));
+    if(Math.abs(pan.dw)>1) S.px=cl(pan.ox+(e.clientX-pan.sx)/pan.dw*100);
+    if(Math.abs(pan.dh)>1) S.py=cl(pan.oy+(e.clientY-pan.sy)/pan.dh*100);
+    applyStyle(); return;
+  }
+  if(!drag) return;
+  drag.p.x=drag.ox+(e.clientX-drag.sx)/drag.unit; drag.p.y=drag.oy+(e.clientY-drag.sy)/drag.unit;
+  drag.t.style.left=drag.p.x+'cqw'; drag.t.style.top=drag.p.y+'cqw';
+});
+const endDrag=()=>{ if(pan){pan=null; save(); return;} if(!drag) return; drag.t.classList.remove('drag'); S.manual=true; drag=null; save(); };
+$('#col').addEventListener('pointerup',endDrag); $('#col').addEventListener('pointercancel',endDrag);
+
+/* ---------- export ---------- */
+function drawPoly(c,pts,x,y,w,h){c.beginPath();pts.forEach((p,k)=>{const px=x+p[0]/100*w,py=y+p[1]/100*h;k?c.lineTo(px,py):c.moveTo(px,py)});c.closePath();c.fill();}
+function drawCover(c,img,x,y,w,h){
+  const k=Math.max(w/img.width,h/img.height), iw=img.width*k, ih=img.height*k;
+  c.drawImage(img,x+(w-iw)/2,y+(h-ih)/2,iw,ih);
+}
+$('#export').addEventListener('click',async()=>{
+  const btn=$('#export'); btn.disabled=true; btn.textContent='輸出中…';
+  try{
+    try{await document.fonts.load(`${S.bold?700:400} 20px "Noto Serif TC"`, S.text); await document.fonts.ready;}catch(e){}
+    const poster=$('#poster'), pr=poster.getBoundingClientRect(), W=1440, k=W/pr.width;
+    const cv=document.createElement('canvas'); cv.width=W; cv.height=Math.round(pr.height*k);
+    const c=cv.getContext('2d'); c.scale(k,k);
+    const rel=el=>{const r=el.getBoundingClientRect();return {x:r.left-pr.left,y:r.top-pr.top,w:r.width,h:r.height}};
+    const tr=rel($('#txt')), cr=rel($('#col')), tc=tileColors();
+    c.fillStyle=S.top; c.fillRect(tr.x,tr.y,tr.w,tr.h);
+    c.save(); c.beginPath(); c.rect(cr.x,cr.y,cr.w,cr.h); c.clip();
+    c.fillStyle=S.bottom; c.fillRect(cr.x,cr.y,cr.w,cr.h);
+    if(photo){
+      const g=photoRect(cr.w,cr.h); c.drawImage(photo.img,cr.x+g.x,cr.y+g.y,g.iw,g.ih);
+      c.globalAlpha=S.tint/100; c.fillStyle=S.bottom; c.fillRect(cr.x,cr.y,cr.w,cr.h); c.globalAlpha=1;
+    }
+    c.restore();
+    const weight=S.bold?700:400, fam='"Noto Serif TC","Songti TC",serif';
+    const fs=parseFloat(getComputedStyle($('#txt')).fontSize);
+    c.font=`${weight} ${fs}px ${fam}`; c.textBaseline='middle'; c.textAlign='left';
+    const holes=new Map(S.punched.map(p=>[p.i,p]));
+    spans.forEach((sp,i)=>{
+      if(!sp) return; const r=rel(sp);
+      if(holes.has(i)){c.fillStyle=S.hole; drawPoly(c,shapePts(holes.get(i).seed),r.x,r.y,r.w,r.h);}
+      else{c.fillStyle=S.ink; c.fillText(sp.textContent,r.x,r.y+r.h/2);}
+    });
+    c.save(); c.beginPath(); c.rect(cr.x,cr.y,cr.w,cr.h); c.clip();
+    document.querySelectorAll('#tiles .tile').forEach(t=>{
+      const r=rel(t), p=t._p, tfs=parseFloat(getComputedStyle(t).fontSize);
+      c.fillStyle=tc.bg; drawPoly(c,shapePts(p.seed),r.x,r.y,r.w,r.h);
+      c.fillStyle=tc.ink; c.font=`${weight} ${tfs}px ${fam}`; c.textAlign='center';
+      c.fillText(p.ch,r.x+r.w/2,r.y+r.h/2);
+    });
+    c.restore();
+    $('#outImg').src=cv.toDataURL('image/png');
+    lastBlob = await new Promise(res=>cv.toBlob(res,'image/png'));
+    $('#dlMsg').textContent='按「下載圖片」存檔，也可以在圖片上按右鍵或長按儲存。';
+    const d=$('#dlg'); d.showModal?d.showModal():d.setAttribute('open','');
+  }finally{btn.disabled=false; btn.textContent='輸出圖片';}
+});
+let lastBlob=null;
+$('#dlBtn').addEventListener('click',()=>{
+  if(!lastBlob) return;
+  const d=new Date(), pad=n=>String(n).padStart(2,'0');
+  const name=`打孔拼貼-${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}.png`;
+  const url=URL.createObjectURL(lastBlob), a=document.createElement('a');
+  a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+  $('#dlMsg').textContent='已下載：'+name+'。手機若沒反應，請長按圖片儲存。';
+});
+$('#closeDlg').addEventListener('click',()=>{const d=$('#dlg'); d.close?d.close():d.removeAttribute('open');});
+
+/* ---------- boot ---------- */
+S=load();
+$('#src').value=S.text;
+applyStyle(); buildText(); count(); refreshCollage();
+try{const u=localStorage.getItem(PHOTO_KEY); if(u) setPhoto(u);}catch(e){}
+</script>
+
+</body>
+</html>
